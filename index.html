@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажер: Производная сложной функции</title>
+    <!-- MathLive для ввода математических формул и виртуальной клавиатуры -->
+    <script defer src="https://unpkg.com/mathlive"></script>
+    <!-- KaTeX для красивого отображения математических формул -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <!-- Algebrite для символьных вычислений и проверки ответов -->
+    <script src="https://cdn.jsdelivr.net/npm/algebrite@1.3.1/dist/algebrite.min.js"></script>
+    <style>
+        /* Основные переменные для цветов и отступов */
+        :root {
+            --primary: #4a90e2;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --bg: #f4f7f9;
+            --text-color: #333;
+            --card-bg: white;
+            --border-color: #ddd;
+            --shadow: 0 15px 35px rgba(0,0,0,0.1);
+            --radius: 20px;
+        }
+
+        /* Общие стили для body */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Стили для основного контейнера приложения */
+        #app {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        /* Контейнер для выбора варианта */
+        .variant-selector-container {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .variant-selector-container label {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        #variant-select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #variant-select:hover {
+            border-color: var(--primary);
+        }
+
+        #variant-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        /* Стили для заголовка (вариант/задача) */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        /* Стили для "бейджиков" (например, номер варианта) */
+        .badge {
+            padding: 6px 15px;
+            border-radius: 15px;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Область для отображения вопроса */
+        .question-area {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #eee;
+            font-size: 1.6rem;
+            line-height: 1.2;
+        }
+
+        /* Стили для поля ввода MathLive */
+        math-field {
+            width: 100%;
+            font-size: 1.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+        }
+
+        /* Стили для поля ввода при фокусе */
+        math-field:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        /* Стили для кнопки "Проверить ответ" */
+        button#submit-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        button#submit-btn:hover {
+            background: #357ABD;
+        }
+
+        button#submit-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Стили для блока статистики (счет и попытки) */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        /* Стили для всплывающего сообщения обратной связи */
+        #feedback {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+            animation: slideDown 0.3s ease forwards;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            min-width: 200px;
+            text-align: center;
+        }
+
+        #feedback small {
+            font-weight: normal;
+            display: block;
+            margin-top: 5px;
+            font-size: 0.85rem;
+        }
+
+        @keyframes slideDown {
+            from { top: -60px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+
+        /* Кастомизация стилей виртуальной клавиатуры MathLive */
+        .MLKbd {
+            background-color: #f0f0f0 !important;
+            border-top: 1px solid #ccc !important;
+            padding: 5px !important;
+        }
+        .MLKbd-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+        .MLKbd-key {
+            background-color: #e0e0e0 !important;
+            border: 1px solid #c0c0c0 !important;
+            border-radius: 5px !important;
+            padding: 8px 12px !important;
+            margin: 3px !important;
+            font-size: 1.1rem !important;
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.1s, border-color 0.1s;
+        }
+        .MLKbd-key:hover {
+            background-color: #d0d0d0 !important;
+            border-color: #a0a0a0 !important;
+        }
+        .MLKbd-key:active {
+            background-color: #c0c0c0 !important;
+            border-color: #909090 !important;
+        }
+        /* Иконки для специальных кнопок клавиатуры */
+        .MLKbd-key[data-latex="\\sqrt{#?}"]::before { content: "√"; }
+        .MLKbd-key[data-latex="#?^{#?}"]::before { content: "^"; }
+        .MLKbd-key[data-latex="\\frac{#?}{#?}"]::before { content: "/"; }
+        .MLKbd-key[data-key="*"]::before { content: "×"; }
+        .MLKbd-key[data-command*="deleteBackward"]::before { content: "⌫"; }
+        .MLKbd-key[data-command*="moveBackward"]::before { content: "←"; }
+        .MLKbd-key[data-command*="moveForward"]::before { content: "→"; }
+
+        /* Адаптивные стили для мобильных устройств */
+        @media (max-width: 600px) {
+            #app {
+                padding: 20px;
+                margin: 10px;
+                border-radius: 15px;
+            }
+            .question-area {
+                font-size: 1.3rem;
+                padding: 15px;
+            }
+            math-field {
+                font-size: 1.2rem;
+                padding: 8px;
+            }
+            .header, .stats {
+                font-size: 1rem;
+            }
+            .badge {
+                padding: 4px 10px;
+                font-size: 0.8rem;
+            }
+            button#submit-btn {
+                padding: 12px;
+                font-size: 1rem;
+            }
+            .MLKbd-key {
+                min-width: 35px;
+                height: 35px;
+                font-size: 1rem !important;
+                padding: 6px 10px !important;
+            }
+            .variant-selector-container {
+                flex-direction: column;
+                gap: 8px;
+            }
+            #variant-select {
+                width: 100%;
+                max-width: 200px; /* Ограничение ширины на мобильных */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Всплывающее окно для обратной связи -->
+<div id="feedback"></div>
+
+<!-- Основной контейнер приложения -->
+<div id="app">
+    <div class="variant-selector-container">
+        <label for="variant-select">Выберите вариант:</label>
+        <select id="variant-select"></select>
+    </div>
+
+    <div class="header">
+        <div id="variant-info" class="badge">Вариант 1/25</div>
+        <div id="task-info">Задача: 1/5</div>
+    </div>
+
+    <div class="question-area" id="question">
+        <!-- Здесь будет отображаться вопрос с KaTeX -->
+    </div>
+
+    <!-- Поле ввода для ответа с виртуальной клавиатурой MathLive -->
+    <math-field id="answer-input" virtual-keyboard-mode="onfocus" placeholder="Введите производную..."></math-field>
+
+    <button id="submit-btn">Проверить ответ</button>
+
+    <div class="stats">
+        <span id="score-display">Правильно: 0</span>
+        <span id="attempts-display">Попыток: 0</span>
+    </div>
+</div>
+
+<!-- Подключение основного скрипта приложения -->
+<script src="script.js"></script>
+
+</body>
+</html>
